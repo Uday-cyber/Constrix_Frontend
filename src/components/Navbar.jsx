@@ -7,7 +7,8 @@ const getInitials = (firstName = "", lastName = "") =>
     `${firstName.trim().charAt(0)}${lastName.trim().charAt(0)}`.toUpperCase() || "U";
 
 const isImageUrl = (value = "") =>
-    /^(https?:\/\/|data:image\/|\/)/i.test(value);
+    value.startsWith("http");
+    // /^(https?:\/\/|data:image\/|\/)/i.test(value);
 
 const Navbar = ({ setIsSidebarOpen }) => {
 
@@ -50,13 +51,20 @@ const Navbar = ({ setIsSidebarOpen }) => {
                         }
                     </button>
 
-                    {/* User Button */}
+                    {/* User Profile */}
                     {
                         showImage ? (
-                            <img src={user.image} alt="User Avatar" className="size-7 rounded-full object-cover" />
+                            <img 
+                            src={user.image} 
+                            alt="User Avatar" 
+                            className="size-7 rounded-full object-cover" 
+                            onError={(e) => {
+                            e.target.style.display = "none";
+                            }}
+                            />
                         ) : (
                             <div className="size-7 rounded-full bg-blue-600 text-white text-xs font-semibold flex items-center justify-center">
-                                {user?.image || initials}
+                                {initials}
                             </div>
                         )
                     }

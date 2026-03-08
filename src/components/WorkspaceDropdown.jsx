@@ -18,7 +18,7 @@ function WorkspaceDropdown() {
     const onSelectWorkspace = (organizationId) => {
         dispatch(setCurrentWorkspace(organizationId))
         setIsOpen(false);
-        navigate('/')
+        navigate('/app')
     }
 
     // Close dropdown on outside click

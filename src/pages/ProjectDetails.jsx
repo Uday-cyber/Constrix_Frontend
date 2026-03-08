@@ -46,7 +46,7 @@ export default function ProjectDetail() {
         return (
             <div className="p-6 text-center text-zinc-900 dark:text-zinc-200">
                 <p className="text-3xl md:text-5xl mt-40 mb-10">Project not found</p>
-                <button onClick={() => navigate('/projects')} className="mt-4 px-4 py-2 rounded bg-zinc-200 text-zinc-900 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-white dark:hover:bg-zinc-600" >
+                <button onClick={() => navigate('/app/projects')} className="mt-4 px-4 py-2 rounded bg-zinc-200 text-zinc-900 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-white dark:hover:bg-zinc-600" >
                     Back to Projects
                 </button>
             </div>
@@ -58,7 +58,7 @@ export default function ProjectDetail() {
             {/* Header */}
             <div className="flex max-md:flex-col gap-4 flex-wrap items-start justify-between max-w-6xl">
                 <div className="flex items-center gap-4">
-                    <button className="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400" onClick={() => navigate('/projects')}>
+                    <button className="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400" onClick={() => navigate('/app/projects')}>
                         <ArrowLeftIcon className="w-4 h-4" />
                     </button>
                     <div className="flex items-center gap-3">
