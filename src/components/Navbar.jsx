@@ -1,22 +1,68 @@
-import { SearchIcon, PanelLeft } from 'lucide-react'
+import { SearchIcon, PanelLeft, ChevronDown } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import { toggleTheme } from '../features/themeSlice'
 import { MoonIcon, SunIcon } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 
 const getInitials = (firstName = "", lastName = "") =>
     `${firstName.trim().charAt(0)}${lastName.trim().charAt(0)}`.toUpperCase() || "U";
 
 const isImageUrl = (value = "") =>
-    value.startsWith("http");
-    // /^(https?:\/\/|data:image\/|\/)/i.test(value);
+    /^(https?:\/\/|data:image\/|\/)/i.test(value);
 
 const Navbar = ({ setIsSidebarOpen }) => {
-
+    const navigate = useNavigate();
     const dispatch = useDispatch();
     const { theme } = useSelector(state => state.theme);
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user") || "{}"));
+    const menuRef = useRef(null);
+
     const initials = getInitials(user?.firstName, user?.lastName);
     const showImage = isImageUrl(user?.image || "");
+
+    useEffect(() => {
+        const onOutsideClick = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setIsMenuOpen(false);
+            }
+        };
+
+        document.addEventListener("mousedown", onOutsideClick);
+        return () => document.removeEventListener("mousedown", onOutsideClick);
+    }, []);
+
+    useEffect(() => {
+        const syncUser = () => setUser(JSON.parse(localStorage.getItem("user") || "{}"));
+        window.addEventListener("storage", syncUser);
+        window.addEventListener("user-updated", syncUser);
+
+        return () => {
+            window.removeEventListener("storage", syncUser);
+            window.removeEventListener("user-updated", syncUser);
+        };
+    }, []);
+
+    const handleLogout = async () => {
+        try {
+            const token = localStorage.getItem("accessToken");
+            await fetch("http://localhost:3000/api/users/logout", {
+                method: "POST",
+                credentials: "include",
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
+            });
+        } catch (_) {
+            // Continue logout on client even if server logout fails.
+        } finally {
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("user");
+            setIsMenuOpen(false);
+            toast.success("Logged out");
+            navigate("/", { replace: true });
+        }
+    };
 
     return (
         <div className="w-full bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 px-6 xl:px-16 py-3 flex-shrink-0">
@@ -51,23 +97,57 @@ const Navbar = ({ setIsSidebarOpen }) => {
                         }
                     </button>
 
-                    {/* User Profile */}
-                    {
-                        showImage ? (
-                            <img 
-                            src={user.image} 
-                            alt="User Avatar" 
-                            className="size-7 rounded-full object-cover" 
-                            onError={(e) => {
-                            e.target.style.display = "none";
-                            }}
-                            />
-                        ) : (
-                            <div className="size-7 rounded-full bg-blue-600 text-white text-xs font-semibold flex items-center justify-center">
-                                {initials}
+                    <div className="relative" ref={menuRef}>
+                        <button
+                            type="button"
+                            onClick={() => setIsMenuOpen((prev) => !prev)}
+                            className="flex items-center gap-2 rounded-lg px-1.5 py-1 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+                        >
+                            {
+                                showImage ? (
+                                    <img
+                                        src={user.image}
+                                        alt="User Avatar"
+                                        className="size-7 rounded-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="size-7 rounded-full bg-blue-600 text-white text-xs font-semibold flex items-center justify-center">
+                                        {initials}
+                                    </div>
+                                )
+                            }
+                            <ChevronDown className="size-4 text-gray-500 dark:text-zinc-400" />
+                        </button>
+
+                        {isMenuOpen && (
+                            <div className="absolute right-0 mt-2 w-44 rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg z-50 overflow-hidden">
+                                <button
+                                    onClick={() => {
+                                        setIsMenuOpen(false);
+                                        navigate("/app/profile");
+                                    }}
+                                    className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800"
+                                >
+                                    Profile
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setIsMenuOpen(false);
+                                        navigate("/app/settings");
+                                    }}
+                                    className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800"
+                                >
+                                    Settings
+                                </button>
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-full px-4 py-2.5 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
+                                >
+                                    Logout
+                                </button>
                             </div>
-                        )
-                    }
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

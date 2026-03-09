@@ -9,6 +9,8 @@ import TaskDetails from "./pages/TaskDetails";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import RequireAuth from "./components/RequireAuth";
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 
 const App = () => {
     return (
@@ -30,6 +32,8 @@ const App = () => {
                     <Route path="projects" element={<Projects />} />
                     <Route path="projectsDetail" element={<ProjectDetails />} />
                     <Route path="taskDetails" element={<TaskDetails />} />
+                    <Route path="profile" element={<Profile />} />
+                    <Route path="settings" element={<Settings />} />
                 </Route>
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
