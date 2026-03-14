@@ -5,6 +5,7 @@ import { MoonIcon, SunIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { useLanguage } from '../context/LanguageContext'
 
 const getInitials = (firstName = "", lastName = "") =>
     `${firstName.trim().charAt(0)}${lastName.trim().charAt(0)}`.toUpperCase() || "U";
@@ -16,6 +17,7 @@ const Navbar = ({ setIsSidebarOpen }) => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const { theme } = useSelector(state => state.theme);
+    const { language, setLanguage, t, languages } = useLanguage();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user") || "{}"));
     const menuRef = useRef(null);
@@ -59,7 +61,7 @@ const Navbar = ({ setIsSidebarOpen }) => {
             localStorage.removeItem("accessToken");
             localStorage.removeItem("user");
             setIsMenuOpen(false);
-            toast.success("Logged out");
+            toast.success(t("common.logout"));
             navigate("/", { replace: true });
         }
     };
@@ -79,7 +81,7 @@ const Navbar = ({ setIsSidebarOpen }) => {
                         <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-400 size-3.5" />
                         <input
                             type="text"
-                            placeholder="Search projects, tasks..."
+                            placeholder={t("common.searchProjectsTasks")}
                             className="pl-8 pr-4 py-2 w-full bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 rounded-md text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition"
                         />
                     </div>
@@ -87,6 +89,18 @@ const Navbar = ({ setIsSidebarOpen }) => {
 
                 {/* Right section */}
                 <div className="flex items-center gap-3">
+                    <select
+                        value={language}
+                        onChange={(e) => setLanguage(e.target.value)}
+                        className="h-8 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs text-gray-700 dark:text-zinc-200 px-2 outline-none"
+                        aria-label="Select language"
+                    >
+                        {languages.map((lang) => (
+                            <option key={lang.code} value={lang.code}>
+                                {lang.label}
+                            </option>
+                        ))}
+                    </select>
 
                     {/* Theme Toggle */}
                     <button onClick={() => dispatch(toggleTheme())} className="size-8 flex items-center justify-center bg-white dark:bg-zinc-800 shadow rounded-lg transition hover:scale-105 active:scale-95">
@@ -128,7 +142,7 @@ const Navbar = ({ setIsSidebarOpen }) => {
                                     }}
                                     className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800"
                                 >
-                                    Profile
+                                    {t("common.profile")}
                                 </button>
                                 <button
                                     onClick={() => {
@@ -137,13 +151,13 @@ const Navbar = ({ setIsSidebarOpen }) => {
                                     }}
                                     className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800"
                                 >
-                                    Settings
+                                    {t("common.settings")}
                                 </button>
                                 <button
                                     onClick={handleLogout}
                                     className="w-full px-4 py-2.5 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
                                 >
-                                    Logout
+                                    {t("common.logout")}
                                 </button>
                             </div>
                         )}

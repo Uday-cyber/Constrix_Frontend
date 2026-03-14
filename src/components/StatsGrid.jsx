@@ -1,8 +1,10 @@
 import { FolderOpen, CheckCircle, Users, AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function StatsGrid() {
+    const { t } = useLanguage();
     const currentWorkspace = useSelector(
         (state) => state?.workspace?.currentWorkspace || null
     );
@@ -18,33 +20,33 @@ export default function StatsGrid() {
     const statCards = [
         {
             icon: FolderOpen,
-            title: "Total Projects",
+            title: t("stats.totalProjects"),
             value: stats.totalProjects,
-            subtitle: `projects in ${currentWorkspace?.name}`,
+            subtitle: t("stats.projectsIn", { name: currentWorkspace?.name || "-" }),
             bgColor: "bg-blue-500/10",
             textColor: "text-blue-500",
         },
         {
             icon: CheckCircle,
-            title: "Completed Projects",
+            title: t("stats.completedProjects"),
             value: stats.completedProjects,
-            subtitle: `of ${stats.totalProjects} total`,
+            subtitle: t("stats.ofTotal", { total: stats.totalProjects }),
             bgColor: "bg-emerald-500/10",
             textColor: "text-emerald-500",
         },
         {
             icon: Users,
-            title: "My Tasks",
+            title: t("stats.myTasks"),
             value: stats.myTasks,
-            subtitle: "assigned to me",
+            subtitle: t("stats.assignedToMe"),
             bgColor: "bg-purple-500/10",
             textColor: "text-purple-500",
         },
         {
             icon: AlertTriangle,
-            title: "Overdue",
+            title: t("stats.overdue"),
             value: stats.overdueIssues,
-            subtitle: "need attention",
+            subtitle: t("stats.needAttention"),
             bgColor: "bg-amber-500/10",
             textColor: "text-amber-500",
         },

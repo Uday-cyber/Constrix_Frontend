@@ -5,8 +5,10 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { CalendarIcon, MessageCircle, PenIcon } from "lucide-react";
 import { assets } from "../assets/assets";
+import { useLanguage } from "../context/LanguageContext";
 
 const TaskDetails = () => {
+    const { t } = useLanguage();
 
     const [searchParams] = useSearchParams();
     const projectId = searchParams.get("projectId");
@@ -45,7 +47,7 @@ const TaskDetails = () => {
 
         try {
 
-            toast.loading("Adding comment...");
+            toast.loading(t("taskDetails.addingComment"));
 
             //  Simulate API call
             await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -55,7 +57,7 @@ const TaskDetails = () => {
             setComments((prev) => [...prev, dummyComment]);
             setNewComment("");
             toast.dismissAll();
-            toast.success("Comment added.");
+            toast.success(t("taskDetails.commentAdded"));
         } catch (error) {
             toast.dismissAll();
             toast.error(error?.response?.data?.message || error.message);
@@ -73,8 +75,8 @@ const TaskDetails = () => {
         }
     }, [taskId, task]);
 
-    if (loading) return <div className="text-gray-500 dark:text-zinc-400 px-4 py-6">Loading task details...</div>;
-    if (!task) return <div className="text-red-500 px-4 py-6">Task not found.</div>;
+    if (loading) return <div className="text-gray-500 dark:text-zinc-400 px-4 py-6">{t("taskDetails.loading")}</div>;
+    if (!task) return <div className="text-red-500 px-4 py-6">{t("taskDetails.notFound")}</div>;
 
     return (
         <div className="flex flex-col-reverse lg:flex-row gap-6 sm:p-4 text-gray-900 dark:text-zinc-100 max-w-6xl mx-auto">
@@ -82,7 +84,7 @@ const TaskDetails = () => {
             <div className="w-full lg:w-2/3">
                 <div className="p-5 rounded-md  border border-gray-300 dark:border-zinc-800  flex flex-col lg:h-[80vh]">
                     <h2 className="text-base font-semibold flex items-center gap-2 mb-4 text-gray-900 dark:text-white">
-                        <MessageCircle className="size-5" /> Task Discussion ({comments.length})
+                        <MessageCircle className="size-5" /> {t("taskDetails.discussion")} ({comments.length})
                     </h2>
 
                     <div className="flex-1 md:overflow-y-scroll no-scrollbar">
@@ -102,7 +104,7 @@ const TaskDetails = () => {
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-gray-600 dark:text-zinc-500 mb-4 text-sm">No comments yet. Be the first!</p>
+                            <p className="text-gray-600 dark:text-zinc-500 mb-4 text-sm">{t("taskDetails.noComments")}</p>
                         )}
                     </div>
 
@@ -111,12 +113,12 @@ const TaskDetails = () => {
                         <textarea
                             value={newComment}
                             onChange={(e) => setNewComment(e.target.value)}
-                            placeholder="Write a comment..."
+                            placeholder={t("taskDetails.writeComment")}
                             className="w-full dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 rounded-md p-2 text-sm text-gray-900 dark:text-zinc-200 resize-none focus:outline-none focus:ring-1 focus:ring-blue-600"
                             rows={3}
                         />
                         <button onClick={handleAddComment} className="bg-gradient-to-l from-blue-500 to-blue-600 transition-colors text-white text-sm px-5 py-2 rounded " >
-                            Post
+                            {t("taskDetails.post")}
                         </button>
                     </div>
                 </div>
@@ -150,11 +152,11 @@ const TaskDetails = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-700 dark:text-zinc-300">
                         <div className="flex items-center gap-2">
                             <img src={task.assignee?.image} className="size-5 rounded-full" alt="avatar" />
-                            {task.assignee?.name || "Unassigned"}
+                            {task.assignee?.name || t("taskDetails.unassigned")}
                         </div>
                         <div className="flex items-center gap-2">
                             <CalendarIcon className="size-4 text-gray-500 dark:text-zinc-500" />
-                            Due : {format(new Date(task.due_date), "dd MMM yyyy")}
+                            {t("taskDetails.due")} : {format(new Date(task.due_date), "dd MMM yyyy")}
                         </div>
                     </div>
                 </div>
@@ -162,13 +164,13 @@ const TaskDetails = () => {
                 {/* Project Info */}
                 {project && (
                     <div className="p-4 rounded-md bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 border border-gray-300 dark:border-zinc-800 ">
-                        <p className="text-xl font-medium mb-4">Project Details</p>
+                        <p className="text-xl font-medium mb-4">{t("taskDetails.projectDetails")}</p>
                         <h2 className="text-gray-900 dark:text-zinc-100 flex items-center gap-2"> <PenIcon className="size-4" /> {project.name}</h2>
-                        <p className="text-xs mt-3">Project Start Date: {format(new Date(project.start_date), "dd MMM yyyy")}</p>
+                        <p className="text-xs mt-3">{t("taskDetails.projectStartDate")}: {format(new Date(project.start_date), "dd MMM yyyy")}</p>
                         <div className="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-zinc-400 mt-3">
-                            <span>Status: {project.status}</span>
-                            <span>Priority: {project.priority}</span>
-                            <span>Progress: {project.progress}%</span>
+                            <span>{t("taskDetails.status")}: {project.status}</span>
+                            <span>{t("taskDetails.priority")}: {project.priority}</span>
+                            <span>{t("taskDetails.progress")}: {project.progress}%</span>
                         </div>
                     </div>
                 )}

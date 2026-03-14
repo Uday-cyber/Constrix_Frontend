@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { GitCommit, MessageSquare, Clock, Bug, Zap, Square } from "lucide-react";
 import { format } from "date-fns";
 import { useSelector } from "react-redux";
+import { useLanguage } from "../context/LanguageContext";
 
 const typeIcons = {
     BUG: { icon: Bug, color: "text-red-500 dark:text-red-400" },
@@ -18,6 +19,7 @@ const statusColors = {
 };
 
 const RecentActivity = () => {
+    const { t } = useLanguage();
     const [tasks, setTasks] = useState([]);
     const { currentWorkspace } = useSelector((state) => state.workspace);
 
@@ -36,7 +38,7 @@ const RecentActivity = () => {
     return (
         <div className="bg-white dark:bg-zinc-950 dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 rounded-lg transition-all overflow-hidden">
             <div className="border-b border-zinc-200 dark:border-zinc-800 p-4">
-                <h2 className="text-lg text-zinc-800 dark:text-zinc-200">Recent Activity</h2>
+                <h2 className="text-lg text-zinc-800 dark:text-zinc-200">{t("recentActivity.title")}</h2>
             </div>
 
             <div className="p-0">
@@ -45,7 +47,7 @@ const RecentActivity = () => {
                         <div className="w-16 h-16 mx-auto mb-4 bg-zinc-200 dark:bg-zinc-800 rounded-full flex items-center justify-center">
                             <Clock className="w-8 h-8 text-zinc-600 dark:text-zinc-500" />
                         </div>
-                        <p className="text-zinc-600 dark:text-zinc-400">No recent activity</p>
+                        <p className="text-zinc-600 dark:text-zinc-400">{t("recentActivity.noRecentActivity")}</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-zinc-200 dark:divide-zinc-800">

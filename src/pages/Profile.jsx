@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../context/LanguageContext";
 
 const API_BASE = "http://localhost:3000/api/users";
 
@@ -7,6 +9,8 @@ const isImageUrl = (value = "") =>
     /^(https?:\/\/|data:image\/|\/)/i.test(value);
 
 const Profile = () => {
+    const navigate = useNavigate();
+    const { t } = useLanguage();
     const [currentUser, setCurrentUser] = useState(
         () => JSON.parse(localStorage.getItem("user") || "{}")
     );
@@ -16,8 +20,10 @@ const Profile = () => {
         lastName: currentUser?.lastName || "",
     });
     const [selectedFile, setSelectedFile] = useState(null);
+    const fileInputRef = useRef(null);
     const [savingInfo, setSavingInfo] = useState(false);
     const [savingImage, setSavingImage] = useState(false);
+    const [deletingAccount, setDeletingAccount] = useState(false);
 
     const previewImage = useMemo(() => {
         if (selectedFile) return URL.createObjectURL(selectedFile);
@@ -43,7 +49,7 @@ const Profile = () => {
     const handleSaveInfo = async (e) => {
         e.preventDefault();
         if (!form.firstName.trim() || !form.lastName.trim()) {
-            toast.error("First and last name are required");
+            toast.error(t("profile.requiredNames"));
             return;
         }
 
@@ -64,12 +70,13 @@ const Profile = () => {
             });
 
             const data = await response.json();
-            if (!response.ok) throw new Error(data?.message || "Failed to update profile");
+            if (!response.ok) throw new Error(data?.message || t("profile.detailsUpdateFail"));
 
-            persistUser(data?.data || currentUser);
-            toast.success("Profile details updated");
+            const updatedUser = data?.data?.user || data?.data || currentUser;
+            persistUser(updatedUser);
+            toast.success(t("profile.detailsUpdated"));
         } catch (error) {
-            toast.error(error.message || "Unable to update details");
+            toast.error(error.message || t("profile.detailsUpdateFail"));
         } finally {
             setSavingInfo(false);
         }
@@ -77,7 +84,12 @@ const Profile = () => {
 
     const handleSaveImage = async () => {
         if (!selectedFile) {
-            toast.error("Select an image first");
+            toast.error(t("profile.selectImageFirst"));
+            return;
+        }
+
+        if (!selectedFile.type.startsWith("image/")) {
+            toast.error(t("profile.imageOnly"));
             return;
         }
 
@@ -95,22 +107,53 @@ const Profile = () => {
             });
 
             const data = await response.json();
-            if (!response.ok) throw new Error(data?.message || "Failed to update image");
+            if (!response.ok) throw new Error(data?.message || t("profile.imageUpdateFail"));
 
-            persistUser(data?.data || currentUser);
+            const updatedUser = data?.data?.user || data?.data || currentUser;
+            persistUser(updatedUser);
             setSelectedFile(null);
-            toast.success("Profile image updated");
+            if (fileInputRef.current) fileInputRef.current.value = "";
+            toast.success(t("profile.imageUpdated"));
         } catch (error) {
-            toast.error(error.message || "Unable to update image");
+            toast.error(error.message || t("profile.imageUpdateFail"));
         } finally {
             setSavingImage(false);
         }
     };
 
+    const handleDeleteAccount = async () => {
+        const confirmed = window.confirm(t("profile.confirmDelete"));
+        if (!confirmed) return;
+
+        try {
+            setDeletingAccount(true);
+            const token = localStorage.getItem("accessToken");
+            const response = await fetch(`${API_BASE}/delete`, {
+                method: "DELETE",
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
+                credentials: "include",
+            });
+
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data?.message || "Failed to delete account");
+
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("user");
+            window.dispatchEvent(new Event("user-updated"));
+
+            toast.success(t("profile.deleteSuccess"));
+            navigate("/", { replace: true });
+        } catch (error) {
+            toast.error(error.message || t("profile.deleteFail"));
+        } finally {
+            setDeletingAccount(false);
+        }
+    };
+
     return (
         <div className="max-w-2xl mx-auto">
-            <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">Profile</h1>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">Manage your account details and image.</p>
+            <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{t("profile.title")}</h1>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">{t("profile.subtitle")}</p>
 
             <div className="mt-6 rounded-lg border border-zinc-200 dark:border-zinc-800 p-5 bg-white dark:bg-zinc-900">
                 <div className="flex items-center gap-4">
@@ -123,6 +166,7 @@ const Profile = () => {
                     )}
                     <div className="flex-1">
                         <input
+                            ref={fileInputRef}
                             type="file"
                             accept="image/*"
                             onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
@@ -131,17 +175,17 @@ const Profile = () => {
                         <button
                             type="button"
                             onClick={handleSaveImage}
-                            disabled={savingImage || !selectedFile}
+                            disabled={savingImage}
                             className="mt-2 px-4 py-2 text-sm rounded bg-zinc-900 text-white disabled:opacity-60"
                         >
-                            {savingImage ? "Uploading..." : "Update Image"}
+                            {savingImage ? t("profile.uploading") : t("profile.updateImage")}
                         </button>
                     </div>
                 </div>
 
                 <form onSubmit={handleSaveInfo} className="mt-6 grid sm:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">First Name</label>
+                        <label className="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">{t("auth.firstName")}</label>
                         <input
                             name="firstName"
                             value={form.firstName}
@@ -150,7 +194,7 @@ const Profile = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">Last Name</label>
+                        <label className="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">{t("auth.lastName")}</label>
                         <input
                             name="lastName"
                             value={form.lastName}
@@ -159,7 +203,7 @@ const Profile = () => {
                         />
                     </div>
                     <div className="sm:col-span-2">
-                        <label className="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">Email</label>
+                        <label className="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">{t("auth.email")}</label>
                         <input
                             value={currentUser?.email || ""}
                             disabled
@@ -172,10 +216,25 @@ const Profile = () => {
                             disabled={savingInfo}
                             className="px-5 py-2 text-sm rounded bg-zinc-900 text-white disabled:opacity-60"
                         >
-                            {savingInfo ? "Saving..." : "Save Details"}
+                            {savingInfo ? t("profile.saving") : t("profile.saveDetails")}
                         </button>
                     </div>
                 </form>
+
+                <div className="mt-8 border-t border-zinc-200 dark:border-zinc-800 pt-5">
+                    {/* <p className="text-sm font-medium text-red-600 dark:text-red-400">Danger Zone</p> */}
+                    <button
+                        type="button"
+                        onClick={handleDeleteAccount}
+                        disabled={deletingAccount}
+                        className="mt-3 px-4 py-2 text-sm rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-60"
+                    >
+                        {deletingAccount ? t("profile.deleting") : t("profile.deleteAccount")}
+                    </button>
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">
+                        {t("profile.dangerText")}
+                    </p>
+                </div>
             </div>
         </div>
     );

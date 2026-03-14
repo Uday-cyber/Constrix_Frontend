@@ -1,11 +1,13 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
+import { useLanguage } from "../context/LanguageContext";
 
 const API_BASE = "http://localhost:3000/api/users";
 
 const Register = () => {
     const navigate = useNavigate();
+    const { t } = useLanguage();
     const [form, setForm] = useState({
         firstName: "",
         lastName: "",
@@ -23,7 +25,7 @@ const Register = () => {
         e.preventDefault();
 
         if (!form.firstName || !form.lastName || !form.email || !form.password) {
-            toast.error("All fields are required");
+            toast.error(t("auth.allFieldsRequired"));
             return;
         }
 
@@ -39,7 +41,7 @@ const Register = () => {
             const registerData = await registerResponse.json();
 
             if (!registerResponse.ok) {
-                throw new Error(registerData?.message || "Registration failed");
+                throw new Error(registerData?.message || t("auth.registrationFail"));
             }
 
             const loginResponse = await fetch(`${API_BASE}/login`, {
@@ -51,16 +53,16 @@ const Register = () => {
             const loginData = await loginResponse.json();
 
             if (!loginResponse.ok) {
-                throw new Error(loginData?.message || "Auto-login failed after registration");
+                throw new Error(loginData?.message || t("auth.autoLoginFail"));
             }
 
             localStorage.setItem("accessToken", loginData?.data?.accessToken || "");
             localStorage.setItem("user", JSON.stringify(loginData?.data?.user || {}));
 
-            toast.success("Registration successful");
+            toast.success(t("auth.registrationSuccess"));
             navigate("/app", { replace: true });
         } catch (error) {
-            toast.error(error.message || "Unable to register");
+            toast.error(error.message || t("auth.unableRegister"));
         } finally {
             setLoading(false);
         }
@@ -69,15 +71,15 @@ const Register = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-amber-100 via-orange-50 to-lime-100 flex items-center justify-center px-4">
             <div className="w-full max-w-md bg-white border border-zinc-200 rounded-2xl shadow-xl p-8">
-                <h1 className="text-2xl font-semibold text-zinc-900">Create Account</h1>
-                <p className="text-sm text-zinc-600 mt-1">Start managing your projects.</p>
+                <h1 className="text-2xl font-semibold text-zinc-900">{t("auth.createAccount")}</h1>
+                <p className="text-sm text-zinc-600 mt-1">{t("auth.startManaging")}</p>
 
                 <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                         <input
                             type="text"
                             name="firstName"
-                            placeholder="First Name"
+                            placeholder={t("auth.firstName")}
                             value={form.firstName}
                             onChange={handleChange}
                             className="w-full border border-zinc-300 rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-orange-400"
@@ -85,7 +87,7 @@ const Register = () => {
                         <input
                             type="text"
                             name="lastName"
-                            placeholder="Last Name"
+                            placeholder={t("auth.lastName")}
                             value={form.lastName}
                             onChange={handleChange}
                             className="w-full border border-zinc-300 rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-orange-400"
@@ -94,7 +96,7 @@ const Register = () => {
                     <input
                         type="email"
                         name="email"
-                        placeholder="Email"
+                        placeholder={t("auth.email")}
                         value={form.email}
                         onChange={handleChange}
                         className="w-full border border-zinc-300 rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-orange-400"
@@ -102,7 +104,7 @@ const Register = () => {
                     <input
                         type="password"
                         name="password"
-                        placeholder="Password"
+                        placeholder={t("auth.password")}
                         value={form.password}
                         onChange={handleChange}
                         className="w-full border border-zinc-300 rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-orange-400"
@@ -113,14 +115,14 @@ const Register = () => {
                         disabled={loading}
                         className="w-full bg-zinc-900 text-white py-2.5 rounded-lg hover:bg-zinc-800 transition disabled:opacity-60"
                     >
-                        {loading ? "Creating account..." : "Register"}
+                        {loading ? t("auth.creatingAccount") : t("auth.register")}
                     </button>
                 </form>
 
                 <p className="text-sm text-zinc-600 mt-5">
-                    Already registered?{" "}
+                    {t("auth.alreadyRegistered")}{" "}
                     <Link to="/" className="text-orange-700 font-medium hover:underline">
-                        Login
+                        {t("auth.login")}
                     </Link>
                 </p>
             </div>

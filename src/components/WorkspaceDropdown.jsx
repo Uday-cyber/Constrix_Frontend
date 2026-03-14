@@ -4,8 +4,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { setCurrentWorkspace } from "../features/workspaceSlice";
 import { useNavigate } from "react-router-dom";
 import { dummyWorkspaces } from "../assets/assets";
+import { useLanguage } from "../context/LanguageContext";
 
 function WorkspaceDropdown() {
+    const { t } = useLanguage();
 
     const { workspaces } = useSelector((state) => state.workspace);
     const currentWorkspace = useSelector((state) => state.workspace?.currentWorkspace || null);
@@ -39,10 +41,10 @@ function WorkspaceDropdown() {
                     <img src={currentWorkspace?.image_url} alt={currentWorkspace?.name} className="w-8 h-8 rounded shadow" />
                     <div className="min-w-0 flex-1">
                         <p className="font-semibold text-gray-800 dark:text-white text-sm truncate">
-                            {currentWorkspace?.name || "Select Workspace"}
+                            {currentWorkspace?.name || t("workspace.selectWorkspace")}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-zinc-400 truncate">
-                            {workspaces.length} workspace{workspaces.length !== 1 ? "s" : ""}
+                            {workspaces.length} {workspaces.length !== 1 ? t("workspace.workspaces") : t("workspace.workspace")}
                         </p>
                     </div>
                 </div>
@@ -53,7 +55,7 @@ function WorkspaceDropdown() {
                 <div className="absolute z-50 w-64 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded shadow-lg top-full left-0">
                     <div className="p-2">
                         <p className="text-xs text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-2 px-2">
-                            Workspaces
+                            {t("workspace.workspaces")}
                         </p>
                         {dummyWorkspaces.map((ws) => (
                             <div key={ws.id} onClick={() => onSelectWorkspace(ws.id)} className="flex items-center gap-3 p-2 cursor-pointer rounded hover:bg-gray-100 dark:hover:bg-zinc-800" >
@@ -63,7 +65,7 @@ function WorkspaceDropdown() {
                                         {ws.name}
                                     </p>
                                     <p className="text-xs text-gray-500 dark:text-zinc-400 truncate">
-                                        {ws.membersCount || 0} members
+                                        {ws.membersCount || 0} {t("workspace.members")}
                                     </p>
                                 </div>
                                 {currentWorkspace?.id === ws.id && (
@@ -77,7 +79,7 @@ function WorkspaceDropdown() {
 
                     <div className="p-2 cursor-pointer rounded group hover:bg-gray-100 dark:hover:bg-zinc-800" >
                         <p className="flex items-center text-xs gap-2 my-1 w-full text-blue-600 dark:text-blue-400 group-hover:text-blue-500 dark:group-hover:text-blue-300">
-                            <Plus className="w-4 h-4" /> Create Workspace
+                            <Plus className="w-4 h-4" /> {t("workspace.createWorkspace")}
                         </p>
                     </div>
                 </div>

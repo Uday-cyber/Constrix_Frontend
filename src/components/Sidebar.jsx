@@ -4,13 +4,15 @@ import MyTasksSidebar from './MyTasksSidebar'
 import ProjectSidebar from './ProjectsSidebar'
 import WorkspaceDropdown from './WorkspaceDropdown'
 import { FolderOpenIcon, LayoutDashboardIcon, SettingsIcon, UsersIcon } from 'lucide-react'
+import { useLanguage } from '../context/LanguageContext'
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
+    const { t } = useLanguage();
 
     const menuItems = [
-        { name: 'Dashboard', href: '/app', icon: LayoutDashboardIcon },
-        { name: 'Projects', href: '/app/projects', icon: FolderOpenIcon },
-        { name: 'Team', href: '/app/team', icon: UsersIcon },
+        { name: t("sidebar.dashboard"), href: '/app', icon: LayoutDashboardIcon },
+        { name: t("sidebar.projects"), href: '/app/projects', icon: FolderOpenIcon },
+        { name: t("sidebar.team"), href: '/app/team', icon: UsersIcon },
     ]
 
     const sidebarRef = useRef(null);
@@ -45,7 +47,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                         ))}
                         <button className='flex w-full items-center gap-3 py-2 px-4 text-gray-800 dark:text-zinc-100 cursor-pointer rounded hover:bg-gray-50 dark:hover:bg-zinc-800/60 transition-all'>
                             <SettingsIcon size={16} />
-                            <p className='text-sm truncate'>Settings</p>
+                            <p className='text-sm truncate'>{t("sidebar.settings")}</p>
                         </button>
                     </div>
                     <MyTasksSidebar />
