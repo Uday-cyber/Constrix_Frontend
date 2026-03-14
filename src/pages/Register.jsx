@@ -2,8 +2,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
-
-const API_BASE = "http://localhost:3000/api/users";
+import { API_BASE_URL } from "../utils/api";
 
 const Register = () => {
     const navigate = useNavigate();
@@ -32,7 +31,7 @@ const Register = () => {
         try {
             setLoading(true);
 
-            const registerResponse = await fetch(`${API_BASE}/register`, {
+            const registerResponse = await fetch(`${API_BASE_URL}/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -44,7 +43,7 @@ const Register = () => {
                 throw new Error(registerData?.message || t("auth.registrationFail"));
             }
 
-            const loginResponse = await fetch(`${API_BASE}/login`, {
+            const loginResponse = await fetch(`${API_BASE_URL}/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",

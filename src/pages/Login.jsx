@@ -2,8 +2,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
-
-const API_BASE = "http://localhost:3000/api/users";
+import { API_BASE_URL } from "../utils/api";
 
 const Login = () => {
     const navigate = useNavigate();
@@ -26,7 +25,7 @@ const Login = () => {
 
         try {
             setLoading(true);
-            const response = await fetch(`${API_BASE}/login`, {
+            const response = await fetch(`${API_BASE_URL}/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",

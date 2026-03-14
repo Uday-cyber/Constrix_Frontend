@@ -2,8 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
-
-const API_BASE = "http://localhost:3000/api/users";
+import { API_BASE_URL } from "../utils/api";
 
 const isImageUrl = (value = "") =>
     /^(https?:\/\/|data:image\/|\/)/i.test(value);
@@ -56,7 +55,7 @@ const Profile = () => {
         try {
             setSavingInfo(true);
             const token = localStorage.getItem("accessToken");
-            const response = await fetch(`${API_BASE}/update`, {
+            const response = await fetch(`${API_BASE_URL}/update`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
@@ -99,7 +98,7 @@ const Profile = () => {
             const formData = new FormData();
             formData.append("profile", selectedFile);
 
-            const response = await fetch(`${API_BASE}/update-profile`, {
+            const response = await fetch(`${API_BASE_URL}/update-profile`, {
                 method: "PATCH",
                 headers: token ? { Authorization: `Bearer ${token}` } : {},
                 credentials: "include",
@@ -128,7 +127,7 @@ const Profile = () => {
         try {
             setDeletingAccount(true);
             const token = localStorage.getItem("accessToken");
-            const response = await fetch(`${API_BASE}/delete`, {
+            const response = await fetch(`${API_BASE_URL}/delete`, {
                 method: "DELETE",
                 headers: token ? { Authorization: `Bearer ${token}` } : {},
                 credentials: "include",

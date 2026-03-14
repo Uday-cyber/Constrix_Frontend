@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useLanguage } from '../context/LanguageContext'
+import { API_BASE_URL } from '../utils/api'
 
 const getInitials = (firstName = "", lastName = "") =>
     `${firstName.trim().charAt(0)}${lastName.trim().charAt(0)}`.toUpperCase() || "U";
@@ -50,7 +51,7 @@ const Navbar = ({ setIsSidebarOpen }) => {
     const handleLogout = async () => {
         try {
             const token = localStorage.getItem("accessToken");
-            await fetch("http://localhost:3000/api/users/logout", {
+            await fetch(`${API_BASE_URL}/logout`, {
                 method: "POST",
                 credentials: "include",
                 headers: token ? { Authorization: `Bearer ${token}` } : {},
