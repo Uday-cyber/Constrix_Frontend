@@ -2,11 +2,20 @@ import { useState } from "react";
 import { Mail, UserPlus } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useLanguage } from "../context/LanguageContext";
+import toast from "react-hot-toast";
+import { WORKSPACE_API_BASE } from "../utils/api";
 
-const InviteMemberDialog = ({ isDialogOpen, setIsDialogOpen }) => {
+const InviteMemberDialog = ({
+    isDialogOpen,
+    setIsDialogOpen,
+    workspaceOverride = null,
+    onDone = null,
+    allowSkip = false,
+}) => {
     const { t } = useLanguage();
 
-    const currentWorkspace = useSelector((state) => state.workspace?.currentWorkspace || null);
+    const currentWorkspaceFromStore = useSelector((state) => state.workspace?.currentWorkspace || null);
+    const currentWorkspace = workspaceOverride || currentWorkspaceFromStore;
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         email: "",
@@ -15,6 +24,61 @@ const InviteMemberDialog = ({ isDialogOpen, setIsDialogOpen }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const workspaceId = currentWorkspace?._id || currentWorkspace?.id;
+        if (!workspaceId) {
+            toast.error("Select a workspace first");
+            return;
+        }
+
+        try {
+            setIsSubmitting(true);
+            const token = localStorage.getItem("accessToken");
+            const role = formData.role === "org:admin" ? "ADMIN" : "MEMBER";
+            const emails = formData.email
+                .split(/[,\n]/)
+                .map((e) => e.trim().toLowerCase())
+                .filter(Boolean);
+
+            if (emails.length === 0) {
+                throw new Error("Enter at least one email");
+            }
+
+            const results = await Promise.allSettled(
+                emails.map((email) =>
+                    fetch(`${WORKSPACE_API_BASE}/${workspaceId}/invitations`, {
+                        method: "POST",
+                        credentials: "include",
+                        headers: {
+                            "Content-Type": "application/json",
+                            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                        },
+                        body: JSON.stringify({ email, role }),
+                    }).then(async (res) => {
+                        const data = await res.json().catch(() => ({}));
+                        if (!res.ok) throw new Error(data?.message || `Failed for ${email}`);
+                        return data;
+                    })
+                )
+            );
+
+            const successCount = results.filter((r) => r.status === "fulfilled").length;
+            const failCount = results.length - successCount;
+
+            if (successCount > 0) {
+                toast.success(`Invitation sent (${successCount})`);
+            }
+            if (failCount > 0) {
+                toast.error(`Failed to send ${failCount} invitation(s)`);
+            }
+
+            setFormData({ email: "", role: "org:member" });
+            setIsDialogOpen(false);
+            onDone?.();
+        } catch (error) {
+            toast.error(error?.message || "Failed to send invitation");
+        } finally {
+            setIsSubmitting(false);
+        }
 
     };
 
@@ -44,7 +108,7 @@ const InviteMemberDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                         </label>
                         <div className="relative">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 dark:text-zinc-400 w-4 h-4" />
-                            <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder={t("auth.email")} className="pl-10 mt-1 w-full rounded border border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-200 text-sm placeholder-zinc-400 dark:placeholder-zinc-500 py-2 focus:outline-none focus:border-blue-500" required />
+                            <textarea value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="example@email.com, example2@email.com" className="pl-10 mt-1 w-full rounded border border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-200 text-sm placeholder-zinc-400 dark:placeholder-zinc-500 py-2 focus:outline-none focus:border-blue-500 h-24 resize-none" required />
                         </div>
                     </div>
 
@@ -59,6 +123,18 @@ const InviteMemberDialog = ({ isDialogOpen, setIsDialogOpen }) => {
 
                     {/* Footer */}
                     <div className="flex justify-end gap-3 pt-2">
+                        {allowSkip && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsDialogOpen(false);
+                                    onDone?.();
+                                }}
+                                className="px-5 py-2 rounded text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+                            >
+                                Skip
+                            </button>
+                        )}
                         <button type="button" onClick={() => setIsDialogOpen(false)} className="px-5 py-2 rounded text-sm border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition" >
                             {t("createTask.cancel")}
                         </button>

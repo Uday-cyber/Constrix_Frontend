@@ -10,9 +10,11 @@ export default function TasksSummary() {
     const [tasks, setTasks] = useState([]);
 
     useEffect(() => {
-        if (currentWorkspace) {
-            setTasks(currentWorkspace.projects.flatMap((project) => project.tasks));
+        if (!currentWorkspace) {
+            setTasks([]);
+            return;
         }
+        setTasks((currentWorkspace.projects || []).flatMap((project) => project.tasks || []));
     }, [currentWorkspace]);
 
     const myTasks = tasks.filter(i => i.assigneeId === user.id);

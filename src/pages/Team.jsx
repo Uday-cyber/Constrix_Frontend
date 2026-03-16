@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { UsersIcon, Search, UserPlus, Shield, Activity } from "lucide-react";
 import InviteMemberDialog from "../components/InviteMemberDialog";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useLanguage } from "../context/LanguageContext";
+import { fetchWorkspaceMembers } from "../features/workspaceSlice";
 
 const Team = () => {
     const { t } = useLanguage();
@@ -11,19 +12,26 @@ const Team = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [users, setUsers] = useState([]);
+    const dispatch = useDispatch();
     const currentWorkspace = useSelector((state) => state?.workspace?.currentWorkspace || null);
     const projects = currentWorkspace?.projects || [];
 
-    const filteredUsers = users.filter(
-        (user) =>
-            user?.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user?.user?.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const query = searchTerm.toLowerCase();
+    const filteredUsers = users.filter((user) => {
+        const name = (user?.user?.name || "").toLowerCase();
+        const email = (user?.user?.email || "").toLowerCase();
+        return name.includes(query) || email.includes(query);
+    });
 
     useEffect(() => {
         setUsers(currentWorkspace?.members || []);
         setTasks(currentWorkspace?.projects?.reduce((acc, project) => [...acc, ...project.tasks], []) || []);
     }, [currentWorkspace]);
+
+    useEffect(() => {
+        if (!currentWorkspace?._id) return;
+        dispatch(fetchWorkspaceMembers(currentWorkspace._id));
+    }, [dispatch, currentWorkspace?._id]);
 
     return (
         <div className="space-y-6 max-w-6xl mx-auto">
@@ -130,7 +138,7 @@ const Team = () => {
                                 <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
                                     {filteredUsers.map((user) => (
                                         <tr
-                                            key={user.id}
+                                            key={user._id || user.id}
                                             className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors"
                                         >
                                             <td className="px-6 py-2.5 whitespace-nowrap flex items-center gap-3">
@@ -166,7 +174,7 @@ const Team = () => {
                         <div className="sm:hidden space-y-3">
                             {filteredUsers.map((user) => (
                                 <div
-                                    key={user.id}
+                                    key={user._id || user.id}
                                     className="p-4 border border-gray-200 dark:border-zinc-800 rounded-md bg-white dark:bg-zinc-900"
                                 >
                                     <div className="flex items-center gap-3 mb-2">

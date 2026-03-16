@@ -25,9 +25,12 @@ const RecentActivity = () => {
 
     const getTasksFromCurrentWorkspace = () => {
 
-        if (!currentWorkspace) return;
+        if (!currentWorkspace) {
+            setTasks([]);
+            return;
+        }
 
-        const tasks = currentWorkspace.projects.flatMap((project) => project.tasks.map((task) => task));
+        const tasks = (currentWorkspace.projects || []).flatMap((project) => (project.tasks || []).map((task) => task));
         setTasks(tasks);
     };
 

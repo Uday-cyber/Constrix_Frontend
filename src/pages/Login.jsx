@@ -1,11 +1,12 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
 import { API_BASE_URL } from "../utils/api";
 
 const Login = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { t } = useLanguage();
     const [form, setForm] = useState({ email: "", password: "" });
     const [loading, setLoading] = useState(false);
@@ -42,7 +43,9 @@ const Login = () => {
             localStorage.setItem("user", JSON.stringify(data?.data?.user || {}));
 
             toast.success(t("auth.loginSuccess"));
-            navigate("/app", { replace: true });
+            const from = location.state?.from;
+            const redirectPath = from ? `${from.pathname || ""}${from.search || ""}` : "/app";
+            navigate(redirectPath || "/app", { replace: true });
         } catch (error) {
             toast.error(error.message || t("auth.unableLogin"));
         } finally {

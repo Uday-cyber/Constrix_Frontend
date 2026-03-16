@@ -11,6 +11,7 @@ import Register from "./pages/Register";
 import RequireAuth from "./components/RequireAuth";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import AcceptInvitation from "./pages/AcceptInvitation";
 
 const App = () => {
     return (
@@ -19,6 +20,14 @@ const App = () => {
             <Routes>
                 <Route path="/" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route
+                    path="/accept-invitation"
+                    element={
+                        <RequireAuth>
+                            <AcceptInvitation />
+                        </RequireAuth>
+                    }
+                />
                 <Route
                     path="/app"
                     element={

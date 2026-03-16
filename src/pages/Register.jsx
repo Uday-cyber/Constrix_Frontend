@@ -1,16 +1,19 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
 import { API_BASE_URL } from "../utils/api";
 
 const Register = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const [searchParams] = useSearchParams();
     const { t } = useLanguage();
+    const inviteEmail = searchParams.get("email") || "";
     const [form, setForm] = useState({
         firstName: "",
         lastName: "",
-        email: "",
+        email: inviteEmail,
         password: "",
     });
     const [loading, setLoading] = useState(false);
@@ -59,7 +62,9 @@ const Register = () => {
             localStorage.setItem("user", JSON.stringify(loginData?.data?.user || {}));
 
             toast.success(t("auth.registrationSuccess"));
-            navigate("/app", { replace: true });
+            const from = location.state?.from;
+            const redirectPath = from ? `${from.pathname || ""}${from.search || ""}` : "/app";
+            navigate(redirectPath || "/app", { replace: true });
         } catch (error) {
             toast.error(error.message || t("auth.unableRegister"));
         } finally {

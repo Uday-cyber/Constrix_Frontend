@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { Plus, Search, FolderOpen } from "lucide-react";
 import ProjectCard from "../components/ProjectCard";
@@ -7,12 +7,10 @@ import { useLanguage } from "../context/LanguageContext";
 
 export default function Projects() {
     const { t } = useLanguage();
-    
-    const projects = useSelector(
-        (state) => state?.workspace?.currentWorkspace?.projects || []
-    );
 
-    const [filteredProjects, setFilteredProjects] = useState([]);
+    const currentWorkspace = useSelector((state) => state?.workspace?.currentWorkspace || null);
+    const projects = useMemo(() => currentWorkspace?.projects || [], [currentWorkspace]);
+
     const [searchTerm, setSearchTerm] = useState("");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [filters, setFilters] = useState({
@@ -20,14 +18,15 @@ export default function Projects() {
         priority: "ALL",
     });
 
-    const filterProjects = () => {
+    const filteredProjects = useMemo(() => {
         let filtered = projects;
 
         if (searchTerm) {
+            const query = searchTerm.toLowerCase();
             filtered = filtered.filter(
                 (project) =>
-                    project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    project.description?.toLowerCase().includes(searchTerm.toLowerCase())
+                    (project?.name || "").toLowerCase().includes(query) ||
+                    (project?.description || "").toLowerCase().includes(query)
             );
         }
 
@@ -41,11 +40,7 @@ export default function Projects() {
             );
         }
 
-        setFilteredProjects(filtered);
-    };
-
-    useEffect(() => {
-        filterProjects();
+        return filtered;
     }, [projects, searchTerm, filters]);
 
     return (
@@ -104,7 +99,7 @@ export default function Projects() {
                     </div>
                 ) : (
                     filteredProjects.map((project) => (
-                        <ProjectCard key={project.id} project={project} />
+                        <ProjectCard key={project._id || project.id} project={project} />
                     ))
                 )}
             </div>

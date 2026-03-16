@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import MyTasksSidebar from './MyTasksSidebar'
 import ProjectSidebar from './ProjectsSidebar'
 import WorkspaceDropdown from './WorkspaceDropdown'
@@ -8,6 +8,7 @@ import { useLanguage } from '../context/LanguageContext'
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
     const { t } = useLanguage();
+    const navigate = useNavigate();
 
     const menuItems = [
         { name: t("sidebar.dashboard"), href: '/app', icon: LayoutDashboardIcon },
@@ -39,13 +40,20 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                                 to={item.href}
                                 key={item.name}
                                 end={item.href === '/app'}
+                                onClick={() => setIsSidebarOpen(false)}
                                 className={({ isActive }) => `flex items-center gap-3 py-2 px-4 text-gray-800 dark:text-zinc-100 cursor-pointer rounded transition-all  ${isActive ? 'bg-gray-100 dark:bg-zinc-900 dark:bg-gradient-to-br dark:from-zinc-800 dark:to-zinc-800/50  dark:ring-zinc-800' : 'hover:bg-gray-50 dark:hover:bg-zinc-800/60'}`}
                             >
                                 <item.icon size={16} />
                                 <p className='text-sm truncate'>{item.name}</p>
                             </NavLink>
                         ))}
-                        <button className='flex w-full items-center gap-3 py-2 px-4 text-gray-800 dark:text-zinc-100 cursor-pointer rounded hover:bg-gray-50 dark:hover:bg-zinc-800/60 transition-all'>
+                        <button
+                            onClick={() => {
+                                setIsSidebarOpen(false);
+                                navigate('/app/settings');
+                            }}
+                            className='flex w-full items-center gap-3 py-2 px-4 text-gray-800 dark:text-zinc-100 cursor-pointer rounded hover:bg-gray-50 dark:hover:bg-zinc-800/60 transition-all'
+                        >
                             <SettingsIcon size={16} />
                             <p className='text-sm truncate'>{t("sidebar.settings")}</p>
                         </button>
