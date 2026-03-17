@@ -22,8 +22,20 @@ const InviteMemberDialog = ({
         role: "org:member",
     });
 
+    const fetchWithTimeout = async (url, options = {}, timeoutMs = 15000) => {
+        const controller = new AbortController();
+        const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            return await fetch(url, { ...options, signal: controller.signal });
+        } finally {
+            window.clearTimeout(timer);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (isSubmitting) return;
+
         const workspaceId = currentWorkspace?._id || currentWorkspace?.id;
         if (!workspaceId) {
             toast.error("Select a workspace first");
@@ -45,7 +57,7 @@ const InviteMemberDialog = ({
 
             const results = await Promise.allSettled(
                 emails.map((email) =>
-                    fetch(`${WORKSPACE_API_BASE}/${workspaceId}/invitations`, {
+                    fetchWithTimeout(`${WORKSPACE_API_BASE}/${workspaceId}/invitations`, {
                         method: "POST",
                         credentials: "include",
                         headers: {
@@ -53,7 +65,7 @@ const InviteMemberDialog = ({
                             ...(token ? { Authorization: `Bearer ${token}` } : {}),
                         },
                         body: JSON.stringify({ email, role }),
-                    }).then(async (res) => {
+                    }, 15000).then(async (res) => {
                         const data = await res.json().catch(() => ({}));
                         if (!res.ok) throw new Error(data?.message || `Failed for ${email}`);
                         return data;
@@ -68,7 +80,8 @@ const InviteMemberDialog = ({
                 toast.success(`Invitation sent (${successCount})`);
             }
             if (failCount > 0) {
-                toast.error(`Failed to send ${failCount} invitation(s)`);
+                const firstError = results.find((r) => r.status === "rejected")?.reason?.message;
+                toast.error(firstError || `Failed to send ${failCount} invitation(s)`);
             }
 
             setFormData({ email: "", role: "org:member" });
