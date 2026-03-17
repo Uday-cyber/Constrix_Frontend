@@ -31,13 +31,44 @@ const AcceptInvitation = () => {
                 }
 
                 const preview = previewData?.data || {};
+                const invitedEmail = String(preview.email || "").trim().toLowerCase();
+                const loggedUser = JSON.parse(localStorage.getItem("user") || "{}");
+                const loggedInEmail = String(loggedUser?.email || "").trim().toLowerCase();
 
                 if (!authToken) {
                     const from = { pathname: "/accept-invitation", search: `?token=${encodeURIComponent(token)}` };
                     if (preview.isRegistered) {
-                        navigate("/", { replace: true, state: { from } });
+                        navigate("/", {
+                            replace: true,
+                            state: { from, inviteEmail: invitedEmail },
+                        });
                     } else {
                         navigate(`/register?email=${encodeURIComponent(preview.email || "")}`, {
+                            replace: true,
+                            state: { from },
+                        });
+                    }
+                    return;
+                }
+
+                // Logged in with a different account: force re-login/register with invited email.
+                if (invitedEmail && loggedInEmail && invitedEmail !== loggedInEmail) {
+                    localStorage.removeItem("accessToken");
+                    localStorage.removeItem("user");
+
+                    const from = {
+                        pathname: "/accept-invitation",
+                        search: `?token=${encodeURIComponent(token)}`,
+                    };
+
+                    toast.error(`Please continue with ${invitedEmail}`);
+                    if (preview.isRegistered) {
+                        navigate("/", {
+                            replace: true,
+                            state: { from, inviteEmail: invitedEmail },
+                        });
+                    } else {
+                        navigate(`/register?email=${encodeURIComponent(invitedEmail)}`, {
                             replace: true,
                             state: { from },
                         });

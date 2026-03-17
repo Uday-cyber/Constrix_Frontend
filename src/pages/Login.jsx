@@ -8,7 +8,8 @@ const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { t } = useLanguage();
-    const [form, setForm] = useState({ email: "", password: "" });
+    const invitedEmail = location.state?.inviteEmail || "";
+    const [form, setForm] = useState({ email: invitedEmail, password: "" });
     const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {

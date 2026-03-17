@@ -22,11 +22,7 @@ const App = () => {
                 <Route path="/register" element={<Register />} />
                 <Route
                     path="/accept-invitation"
-                    element={
-                        <RequireAuth>
-                            <AcceptInvitation />
-                        </RequireAuth>
-                    }
+                    element={<AcceptInvitation />}
                 />
                 <Route
                     path="/app"

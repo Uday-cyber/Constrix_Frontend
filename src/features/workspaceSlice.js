@@ -8,6 +8,7 @@ export const fetchMyWorkspaces = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const token = localStorage.getItem("accessToken");
+            if (!token) return [];
             const response = await fetch(WORKSPACE_API_BASE, {
                 method: "GET",
                 credentials: "include",
@@ -170,18 +171,29 @@ const workspaceSlice = createSlice({
                 const workspace = action.payload;
                 if (!workspace) return;
 
-                state.workspaces.push(workspace);
-                state.currentWorkspace = workspace;
+                const normalizedWorkspace = {
+                    ...workspace,
+                    memberCount: workspace.memberCount ?? 1,
+                };
+
+                state.workspaces.push(normalizedWorkspace);
+                state.currentWorkspace = normalizedWorkspace;
                 localStorage.setItem("currentWorkspaceId", getWorkspaceId(workspace));
             })
             .addCase(fetchWorkspaceMembers.fulfilled, (state, action) => {
                 const { workspaceId, members } = action.payload;
                 state.workspaces = state.workspaces.map((w) =>
-                    getWorkspaceId(w) === workspaceId ? { ...w, members } : w
+                    getWorkspaceId(w) === workspaceId
+                        ? { ...w, members, memberCount: members.length }
+                        : w
                 );
 
                 if (getWorkspaceId(state.currentWorkspace) === workspaceId) {
-                    state.currentWorkspace = { ...state.currentWorkspace, members };
+                    state.currentWorkspace = {
+                        ...state.currentWorkspace,
+                        members,
+                        memberCount: members.length,
+                    };
                 }
             });
     },

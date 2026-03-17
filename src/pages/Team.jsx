@@ -14,6 +14,7 @@ const Team = () => {
     const [users, setUsers] = useState([]);
     const dispatch = useDispatch();
     const currentWorkspace = useSelector((state) => state?.workspace?.currentWorkspace || null);
+    const workspaceId = currentWorkspace?._id || currentWorkspace?.id || null;
     const projects = currentWorkspace?.projects || [];
 
     const query = searchTerm.toLowerCase();
@@ -29,9 +30,25 @@ const Team = () => {
     }, [currentWorkspace]);
 
     useEffect(() => {
-        if (!currentWorkspace?._id) return;
-        dispatch(fetchWorkspaceMembers(currentWorkspace._id));
-    }, [dispatch, currentWorkspace?._id]);
+        if (!workspaceId) return;
+        dispatch(fetchWorkspaceMembers(workspaceId));
+    }, [dispatch, workspaceId]);
+
+    useEffect(() => {
+        if (!workspaceId) return;
+
+        const intervalId = window.setInterval(() => {
+            dispatch(fetchWorkspaceMembers(workspaceId));
+        }, 5000);
+
+        const handleFocus = () => dispatch(fetchWorkspaceMembers(workspaceId));
+        window.addEventListener("focus", handleFocus);
+
+        return () => {
+            window.clearInterval(intervalId);
+            window.removeEventListener("focus", handleFocus);
+        };
+    }, [dispatch, workspaceId]);
 
     return (
         <div className="space-y-6 max-w-6xl mx-auto">
@@ -46,7 +63,13 @@ const Team = () => {
                 <button onClick={() => setIsDialogOpen(true)} className="flex items-center px-5 py-2 rounded text-sm bg-gradient-to-br from-blue-500 to-blue-600 hover:opacity-90 text-white transition" >
                     <UserPlus className="w-4 h-4 mr-2" /> {t("team.inviteMember")}
                 </button>
-                <InviteMemberDialog isDialogOpen={isDialogOpen} setIsDialogOpen={setIsDialogOpen} />
+                <InviteMemberDialog
+                    isDialogOpen={isDialogOpen}
+                    setIsDialogOpen={setIsDialogOpen}
+                    onDone={() => {
+                        if (workspaceId) dispatch(fetchWorkspaceMembers(workspaceId));
+                    }}
+                />
             </div>
 
             {/* Stats Cards */}
