@@ -40,12 +40,23 @@ const refreshAccessToken = async () => {
 };
 
 export const authFetch = async (url, options = {}) => {
-    const makeRequest = () =>
-        fetch(url, {
-            ...options,
-            credentials: "include",
-            headers: getAuthHeaders(options.headers || {}),
-        });
+    const { timeoutMs = 15000, ...fetchOptions } = options;
+
+    const makeRequest = async () => {
+        const controller = new AbortController();
+        const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+
+        try {
+            return await fetch(url, {
+                ...fetchOptions,
+                credentials: "include",
+                signal: controller.signal,
+                headers: getAuthHeaders(fetchOptions.headers || {}),
+            });
+        } finally {
+            window.clearTimeout(timer);
+        }
+    };
 
     let response = await makeRequest();
 
@@ -57,4 +68,3 @@ export const authFetch = async (url, options = {}) => {
     response = await makeRequest();
     return response;
 };
-

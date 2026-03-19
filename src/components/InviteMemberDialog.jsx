@@ -23,16 +23,6 @@ const InviteMemberDialog = ({
         role: "org:member",
     });
 
-    const fetchWithTimeout = async (url, options = {}, timeoutMs = 15000) => {
-        const controller = new AbortController();
-        const timer = window.setTimeout(() => controller.abort(), timeoutMs);
-        try {
-            return await fetch(url, { ...options, signal: controller.signal });
-        } finally {
-            window.clearTimeout(timer);
-        }
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (isSubmitting) return;
@@ -57,14 +47,9 @@ const InviteMemberDialog = ({
 
             const results = await Promise.allSettled(
                 emails.map((email) =>
-                    fetchWithTimeout(`${WORKSPACE_API_BASE}/${workspaceId}/invitations`, {
+                    authFetch(`${WORKSPACE_API_BASE}/${workspaceId}/invitations`, {
                         method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({ email, role }),
-                    }, 15000).then((res) => authFetch(res.url, {
-                        method: "POST",
+                        timeoutMs: 15000,
                         headers: {
                             "Content-Type": "application/json",
                         },
