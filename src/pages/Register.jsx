@@ -59,6 +59,7 @@ const Register = () => {
             }
 
             localStorage.setItem("accessToken", loginData?.data?.accessToken || "");
+            localStorage.setItem("refreshToken", loginData?.data?.refreshToken || "");
             localStorage.setItem("user", JSON.stringify(loginData?.data?.user || {}));
 
             toast.success(t("auth.registrationSuccess"));

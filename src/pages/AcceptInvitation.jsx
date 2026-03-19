@@ -54,6 +54,7 @@ const AcceptInvitation = () => {
                 // Logged in with a different account: force re-login/register with invited email.
                 if (invitedEmail && loggedInEmail && invitedEmail !== loggedInEmail) {
                     localStorage.removeItem("accessToken");
+                    localStorage.removeItem("refreshToken");
                     localStorage.removeItem("user");
 
                     const from = {

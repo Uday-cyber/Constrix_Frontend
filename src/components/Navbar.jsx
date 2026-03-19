@@ -60,6 +60,7 @@ const Navbar = ({ setIsSidebarOpen }) => {
             // Continue logout on client even if server logout fails.
         } finally {
             localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
             localStorage.removeItem("user");
             setIsMenuOpen(false);
             toast.success(t("common.logout"));

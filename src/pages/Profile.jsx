@@ -137,6 +137,7 @@ const Profile = () => {
             if (!response.ok) throw new Error(data?.message || "Failed to delete account");
 
             localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
             localStorage.removeItem("user");
             window.dispatchEvent(new Event("user-updated"));
 

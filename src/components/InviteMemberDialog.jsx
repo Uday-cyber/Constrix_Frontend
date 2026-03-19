@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { useLanguage } from "../context/LanguageContext";
 import toast from "react-hot-toast";
 import { WORKSPACE_API_BASE } from "../utils/api";
+import { authFetch } from "../utils/authFetch";
 
 const InviteMemberDialog = ({
     isDialogOpen,
@@ -44,7 +45,6 @@ const InviteMemberDialog = ({
 
         try {
             setIsSubmitting(true);
-            const token = localStorage.getItem("accessToken");
             const role = formData.role === "org:admin" ? "ADMIN" : "MEMBER";
             const emails = formData.email
                 .split(/[,\n]/)
@@ -59,15 +59,27 @@ const InviteMemberDialog = ({
                 emails.map((email) =>
                     fetchWithTimeout(`${WORKSPACE_API_BASE}/${workspaceId}/invitations`, {
                         method: "POST",
-                        credentials: "include",
                         headers: {
                             "Content-Type": "application/json",
-                            ...(token ? { Authorization: `Bearer ${token}` } : {}),
                         },
                         body: JSON.stringify({ email, role }),
-                    }, 15000).then(async (res) => {
+                    }, 15000).then((res) => authFetch(res.url, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ email, role }),
+                    })).then(async (res) => {
                         const data = await res.json().catch(() => ({}));
-                        if (!res.ok) throw new Error(data?.message || `Failed for ${email}`);
+                        if (!res.ok) {
+                            if (res.status === 409) {
+                                throw new Error(`${email}: Invitation already sent`);
+                            }
+                            if (res.status === 401) {
+                                throw new Error("Session expired. Please login again.");
+                            }
+                            throw new Error(data?.message || `Failed for ${email}`);
+                        }
                         return data;
                     })
                 )
@@ -84,11 +96,17 @@ const InviteMemberDialog = ({
                 toast.error(firstError || `Failed to send ${failCount} invitation(s)`);
             }
 
-            setFormData({ email: "", role: "org:member" });
-            setIsDialogOpen(false);
-            onDone?.();
+            if (successCount > 0) {
+                setFormData({ email: "", role: "org:member" });
+                setIsDialogOpen(false);
+                onDone?.();
+            }
         } catch (error) {
-            toast.error(error?.message || "Failed to send invitation");
+            const message =
+                error?.name === "AbortError"
+                    ? "Request timed out. Please try again."
+                    : error?.message || "Failed to send invitation";
+            toast.error(message);
         } finally {
             setIsSubmitting(false);
         }
@@ -162,3 +180,4 @@ const InviteMemberDialog = ({
 };
 
 export default InviteMemberDialog;
+
