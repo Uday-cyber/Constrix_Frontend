@@ -54,7 +54,7 @@ const InviteMemberDialog = ({
                             "Content-Type": "application/json",
                         },
                         body: JSON.stringify({ email, role }),
-                    })).then(async (res) => {
+                    }).then(async (res) => {
                         const data = await res.json().catch(() => ({}));
                         if (!res.ok) {
                             if (res.status === 409) {
