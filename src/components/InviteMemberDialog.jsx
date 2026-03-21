@@ -49,7 +49,7 @@ const InviteMemberDialog = ({
                 emails.map((email) =>
                     authFetch(`${WORKSPACE_API_BASE}/${workspaceId}/invitations`, {
                         method: "POST",
-                        timeoutMs: 15000,
+                        timeoutMs: 60000,
                         headers: {
                             "Content-Type": "application/json",
                         },
