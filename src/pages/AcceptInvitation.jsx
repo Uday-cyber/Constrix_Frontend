@@ -27,7 +27,13 @@ const AcceptInvitation = () => {
                 );
                 const previewData = await previewResponse.json().catch(() => ({}));
                 if (!previewResponse.ok) {
-                    throw new Error(previewData?.message || "Invalid or expired invitation");
+                    navigate("/invitation-expired", {
+                        replace: true,
+                        state: {
+                            message: previewData?.message || "Invitation not found or expired",
+                        },
+                    });
+                    return;
                 }
 
                 const preview = previewData?.data || {};
@@ -88,7 +94,18 @@ const AcceptInvitation = () => {
                 });
 
                 const data = await response.json().catch(() => ({}));
-                if (!response.ok) throw new Error(data?.message || "Failed to accept invitation");
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        navigate("/invitation-expired", {
+                            replace: true,
+                            state: {
+                                message: data?.message || "Invitation not found or expired",
+                            },
+                        });
+                        return;
+                    }
+                    throw new Error(data?.message || "Failed to accept invitation");
+                }
 
                 await dispatch(fetchMyWorkspaces());
                 toast.success("Invitation accepted");
@@ -104,11 +121,7 @@ const AcceptInvitation = () => {
     }, [dispatch, navigate, token]);
 
     if (!token) {
-        return (
-            <div className="min-h-screen flex items-center justify-center px-4">
-                <p className="text-sm text-zinc-600 dark:text-zinc-300">Invalid invitation link.</p>
-            </div>
-        );
+        return null;
     }
 
     return (

@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
-import { UsersIcon, Search, UserPlus, Shield, Activity } from "lucide-react";
+import { UsersIcon, Search, UserPlus, Shield, Activity, Trash2 } from "lucide-react";
 import InviteMemberDialog from "../components/InviteMemberDialog";
 import { useDispatch, useSelector } from "react-redux";
 import { useLanguage } from "../context/LanguageContext";
 import { fetchWorkspaceMembers } from "../features/workspaceSlice";
+import toast from "react-hot-toast";
+import { authFetch } from "../utils/authFetch";
+import { WORKSPACE_API_BASE } from "../utils/api";
 
 const Team = () => {
     const { t } = useLanguage();
@@ -11,11 +14,14 @@ const Team = () => {
     const [tasks, setTasks] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [removingMemberId, setRemovingMemberId] = useState("");
     const [users, setUsers] = useState([]);
     const dispatch = useDispatch();
     const currentWorkspace = useSelector((state) => state?.workspace?.currentWorkspace || null);
     const workspaceId = currentWorkspace?._id || currentWorkspace?.id || null;
     const projects = currentWorkspace?.projects || [];
+    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const canManageMembers = currentWorkspace?.myRole === "ADMIN" || currentUser?.role === "ADMIN";
 
     const query = searchTerm.toLowerCase();
     const filteredUsers = users.filter((user) => {
@@ -49,6 +55,35 @@ const Team = () => {
             window.removeEventListener("focus", handleFocus);
         };
     }, [dispatch, workspaceId]);
+
+    const handleRemoveMember = async (member) => {
+        const memberUserId = member?.user?._id;
+        if (!workspaceId || !memberUserId) return;
+
+        if (!window.confirm(`Remove ${member.user?.name || member.user?.email || "this member"} from the workspace?`)) {
+            return;
+        }
+
+        try {
+            setRemovingMemberId(memberUserId);
+            const response = await authFetch(`${WORKSPACE_API_BASE}/${workspaceId}/members/${memberUserId}`, {
+                method: "DELETE",
+                timeoutMs: 20000,
+            });
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(data?.message || "Failed to remove member");
+            }
+
+            toast.success("Member removed successfully");
+            dispatch(fetchWorkspaceMembers(workspaceId));
+        } catch (error) {
+            toast.error(error?.message || "Failed to remove member");
+        } finally {
+            setRemovingMemberId("");
+        }
+    };
 
     return (
         <div className="space-y-6 max-w-6xl mx-auto">
@@ -156,6 +191,11 @@ const Team = () => {
                                         <th className="px-6 py-2.5 text-left font-medium text-sm">
                                             {t("team.role")}
                                         </th>
+                                        {canManageMembers && (
+                                            <th className="px-6 py-2.5 text-left font-medium text-sm">
+                                                Action
+                                            </th>
+                                        )}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
@@ -187,6 +227,23 @@ const Team = () => {
                                                     {user.role || t("team.userRole")}
                                                 </span>
                                             </td>
+                                            {canManageMembers && (
+                                                <td className="px-6 py-2.5 whitespace-nowrap">
+                                                    {user.role === "ADMIN" ? (
+                                                        <span className="text-xs text-zinc-400">Owner/Admin</span>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveMember(user)}
+                                                            disabled={removingMemberId === user.user?._id}
+                                                            className="inline-flex items-center gap-2 rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-60"
+                                                        >
+                                                            <Trash2 className="size-3.5" />
+                                                            {removingMemberId === user.user?._id ? "Removing..." : "Remove"}
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            )}
                                         </tr>
                                     ))}
                                 </tbody>
@@ -225,6 +282,17 @@ const Team = () => {
                                             {user.role || t("team.userRole")}
                                         </span>
                                     </div>
+                                    {canManageMembers && user.role !== "ADMIN" && (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveMember(user)}
+                                            disabled={removingMemberId === user.user?._id}
+                                            className="mt-3 inline-flex items-center gap-2 rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-60"
+                                        >
+                                            <Trash2 className="size-3.5" />
+                                            {removingMemberId === user.user?._id ? "Removing..." : "Remove Member"}
+                                        </button>
+                                    )}
                                 </div>
                             ))}
                         </div>

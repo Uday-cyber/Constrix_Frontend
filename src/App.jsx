@@ -12,6 +12,7 @@ import RequireAuth from "./components/RequireAuth";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import AcceptInvitation from "./pages/AcceptInvitation";
+import InvitationExpired from "./pages/InvitationExpired";
 
 const App = () => {
     return (
@@ -24,6 +25,7 @@ const App = () => {
                     path="/accept-invitation"
                     element={<AcceptInvitation />}
                 />
+                <Route path="/invitation-expired" element={<InvitationExpired />} />
                 <Route
                     path="/app"
                     element={
