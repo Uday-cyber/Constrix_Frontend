@@ -15,6 +15,7 @@ const Team = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [removingMemberId, setRemovingMemberId] = useState("");
+    const [memberToRemove, setMemberToRemove] = useState(null);
     const [users, setUsers] = useState([]);
     const dispatch = useDispatch();
     const currentWorkspace = useSelector((state) => state?.workspace?.currentWorkspace || null);
@@ -60,10 +61,6 @@ const Team = () => {
         const memberUserId = member?.user?._id;
         if (!workspaceId || !memberUserId) return;
 
-        if (!window.confirm(`Remove ${member.user?.name || member.user?.email || "this member"} from the workspace?`)) {
-            return;
-        }
-
         try {
             setRemovingMemberId(memberUserId);
             const response = await authFetch(`${WORKSPACE_API_BASE}/${workspaceId}/members/${memberUserId}`, {
@@ -78,6 +75,7 @@ const Team = () => {
 
             toast.success("Member removed successfully");
             dispatch(fetchWorkspaceMembers(workspaceId));
+            setMemberToRemove(null);
         } catch (error) {
             toast.error(error?.message || "Failed to remove member");
         } finally {
@@ -234,7 +232,7 @@ const Team = () => {
                                                     ) : (
                                                         <button
                                                             type="button"
-                                                            onClick={() => handleRemoveMember(user)}
+                                                            onClick={() => setMemberToRemove(user)}
                                                             disabled={removingMemberId === user.user?._id}
                                                             className="inline-flex items-center gap-2 rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-60"
                                                         >
@@ -285,7 +283,7 @@ const Team = () => {
                                     {canManageMembers && user.role !== "ADMIN" && (
                                         <button
                                             type="button"
-                                            onClick={() => handleRemoveMember(user)}
+                                            onClick={() => setMemberToRemove(user)}
                                             disabled={removingMemberId === user.user?._id}
                                             className="mt-3 inline-flex items-center gap-2 rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-60"
                                         >
@@ -299,6 +297,46 @@ const Team = () => {
                     </div>
                 )}
             </div>
+
+            {memberToRemove && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 backdrop-blur-sm">
+                    <div className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950">
+                        <div className="flex items-start gap-4">
+                            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300">
+                                <Trash2 className="size-5" />
+                            </div>
+                            <div className="min-w-0">
+                                <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">
+                                    Remove Team Member
+                                </h3>
+                                <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                                    Remove {memberToRemove.user?.name || memberToRemove.user?.email || "this member"} from this workspace?
+                                    You can invite them again later by sending a new invitation.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setMemberToRemove(null)}
+                                disabled={!!removingMemberId}
+                                className="rounded-xl border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-60 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-900"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleRemoveMember(memberToRemove)}
+                                disabled={removingMemberId === memberToRemove.user?._id}
+                                className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-700 disabled:opacity-60"
+                            >
+                                {removingMemberId === memberToRemove.user?._id ? "Removing..." : "Remove Member"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
 
         </div>
